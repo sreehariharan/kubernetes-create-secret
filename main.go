@@ -14,16 +14,14 @@ import (
 	corev1Types "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-)
-
-var (
-	secretsClient corev1Types.SecretInterface
+	"k8s.io/klog"
 )
 
 func createOrUpdateSecret(clientset *kubernetes.Clientset, secretSpec *corev1.Secret) {
 
 	var operation string
 	var err error
+	var secretsClient corev1Types.SecretInterface
 
 	if secretSpec.Namespace == "" {
 		secretSpec.Namespace = "default"
@@ -44,7 +42,7 @@ func createOrUpdateSecret(clientset *kubernetes.Clientset, secretSpec *corev1.Se
 	if err != nil {
 		panic(err.Error())
 	} else {
-		fmt.Printf("secret %s %s successfully", secretSpec.Name, operation)
+		klog.Infof("secret %s %s successfully", secretSpec.Name, operation)
 	}
 
 }
@@ -64,8 +62,11 @@ func parseSecretDataJSONFile(jsonFilePath *string) map[string]string {
 
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 
-		json.Unmarshal([]byte(byteValue), &returnMap)
+		err = json.Unmarshal([]byte(byteValue), &returnMap)
 
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 	return returnMap
 }
@@ -93,18 +94,10 @@ func main() {
 
 	secretData := parseSecretDataJSONFile(secretDataJSONPath)
 
-	if *kubeconfig == "" {
-		fmt.Println("Unable to locate kubeconfig, trying to use In Cluster connection")
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			panic(err.Error())
-		}
-	} else {
-		// use the current context in kubeconfig
-		config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-		if err != nil {
-			panic(err.Error())
-		}
+	// use the current context in kubeconfig
+	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		panic(err.Error())
 	}
 
 	// create the clientset
@@ -120,5 +113,7 @@ func main() {
 	secretSpec.StringData = secretData
 
 	createOrUpdateSecret(clientset, &secretSpec)
+
+	klog.Flush()
 
 }
