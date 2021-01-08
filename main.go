@@ -77,7 +77,7 @@ func main() {
 		secretName         = flag.String("name", "default-sec", "name of the secret to create")
 		secretNamespace    = flag.String("namespace", "default", "namespace of the secret")
 		secretType         = flag.String("type", string(corev1.SecretTypeOpaque), "type of the secret")
-		secretDataJSONPath = flag.String("data-path-json", "", "absolute path to secret data in json format")
+		secretDataJSONPath = flag.String("data-json-path", "", "absolute path to secret data in json format")
 
 		err    error
 		config *rest.Config
