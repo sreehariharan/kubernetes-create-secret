@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -66,6 +67,14 @@ func parseSecretDataJSONFile(jsonFilePath *string) map[string]string {
 
 		if err != nil {
 			panic(err.Error())
+		}
+
+		for k := range returnMap {
+			decoded, err := base64.StdEncoding.DecodeString(returnMap[k])
+			if err != nil {
+				panic(err.Error())
+			}
+			returnMap[k] = string(decoded)
 		}
 	}
 	return returnMap
